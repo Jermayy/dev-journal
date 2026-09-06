@@ -2,6 +2,8 @@ import { prisma } from '@/lib/prisma';
 import { notFound } from 'next/navigation';
 import { updateEntry } from '@/app/entries/actions';
 import BackButton from '@/app/entries/components/backButton';
+import SubmitButton from '@/app/entries/components/submitButton';
+import { Container, Stack, Text, TextInput, Title } from '@mantine/core';
 
 export default async function EditEntryPage({
   params,
@@ -25,34 +27,38 @@ export default async function EditEntryPage({
   }
 
   return (
-    (
-      <>
-        <head>
-          <p>Editing {entry.title}</p>
-          <ul>
-            <li>
-              <BackButton />
-            </li>
-          </ul>
-        </head>
-      </>
-    ),
-    (
+    <Container size="sm" py="xl">
+      <BackButton />
+      <Text c="dimmed" mt="md">
+        Editing {entry.title}
+      </Text>
+
       <form action={updateEntry}>
         <input type="hidden" name="id" value={entry.id} />
-        <h1>Edit Entry</h1>
+        <Title order={1} mt="xs" mb="lg">
+          Edit Entry
+        </Title>
 
-        <input
-          type="text"
-          name="title"
-          defaultValue={entry.title}
-          placeholder="Title"
-          required
-        />
-        <input name="tag" defaultValue={entry.tag} placeholder="Tag" required />
-
-        <button type="submit">Save</button>
+        <Stack gap="md" align="flex-start">
+          <TextInput
+            name="title"
+            label="Title"
+            defaultValue={entry.title}
+            placeholder="Title"
+            required
+            w="100%"
+          />
+          <TextInput
+            name="tag"
+            label="Tag"
+            defaultValue={entry.tag}
+            placeholder="Tag"
+            required
+            w="100%"
+          />
+          <SubmitButton>Save</SubmitButton>
+        </Stack>
       </form>
-    )
+    </Container>
   );
 }

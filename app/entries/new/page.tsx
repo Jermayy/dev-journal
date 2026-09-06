@@ -1,16 +1,22 @@
 import { createEntry } from '@/app/entries/actions';
 import BackButton from '@/app/entries/components/backButton';
+import SubmitButton from '@/app/entries/components/submitButton';
+import { Container, Stack, TextInput, Title } from '@mantine/core';
 
 export default function NewEntryPage() {
   return (
-    <main>
+    <Container size="sm" py="xl">
       <BackButton />
-      <h1>New Entry</h1>
+      <Title order={1} mt="md" mb="lg">
+        New Entry
+      </Title>
       <form action={createEntry}>
-        <input name="title" placeholder="Title" required />
-        <input name="tag" placeholder="Tag" required />
-        <button type="submit">Create Entry</button>
+        <Stack gap="md" align="flex-start">
+          <TextInput name="title" label="Title" placeholder="Title" required w="100%" />
+          <TextInput name="tag" label="Tag" placeholder="Tag" required w="100%" />
+          <SubmitButton>Create Entry</SubmitButton>
+        </Stack>
       </form>
-    </main>
+    </Container>
   );
 }

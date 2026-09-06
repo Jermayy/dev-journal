@@ -1,4 +1,5 @@
 'use client';
+import { Button } from '@mantine/core';
 import { deleteEntry } from '@/app/entries/actions';
 import { useTransition } from 'react';
 
@@ -6,12 +7,14 @@ export default function DeleteButton({ entryId }: { entryId: number }) {
   const [isPending, startTransition] = useTransition();
 
   return (
-    <button
-      disabled={isPending}
+    <Button
       type="button"
+      color="red"
+      variant="light"
+      loading={isPending}
       onClick={() => startTransition(() => deleteEntry(entryId))}
     >
-      {isPending ? 'Deleting...' : 'Delete'}
-    </button>
+      Delete
+    </Button>
   );
 }

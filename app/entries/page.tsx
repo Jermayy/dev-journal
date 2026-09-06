@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 import { prisma } from '@/lib/prisma';
 import { formatDate } from '@/lib/utils/formatDate';
 import type { Entry } from '@prisma/client';
+import { Badge, Card, Container, Group, Stack, Text, Title } from '@mantine/core';
 import EditButton from './components/editButton';
 import DeleteButton from './components/deleteButton';
 import NewButton from './components/newButton';
@@ -13,24 +14,35 @@ export default async function EntriesPage() {
   });
 
   return (
-    <main style={{ padding: '2rem' }}>
-      <h1>Dev Journal</h1>
-      <NewButton />
+    <Container size="sm" py="xl">
+      <Group justify="space-between" mb="lg">
+        <Title order={1}>Dev Journal</Title>
+        <NewButton />
+      </Group>
+
       {entries.length === 0 ? (
-        <p>No entries yet.</p>
+        <Text c="dimmed">No entries yet.</Text>
       ) : (
-        <ul>
+        <Stack gap="md">
           {entries.map((entry) => (
-            <li key={entry.id} style={{ marginBottom: '1rem' }}>
-              <h3>{entry.title}</h3>
-              <p>{entry.tag}</p>
-              <small>{formatDate(entry.createdAt)}</small>
-              <EditButton entryId={entry.id} />
-              <DeleteButton entryId={entry.id} />
-            </li>
+            <Card key={entry.id} withBorder padding="lg" radius="md">
+              <Stack gap={4} mb="sm">
+                <Title order={3}>{entry.title}</Title>
+                <Group gap="xs">
+                  <Badge variant="light">{entry.tag}</Badge>
+                  <Text size="xs" c="dimmed">
+                    {formatDate(entry.createdAt)}
+                  </Text>
+                </Group>
+              </Stack>
+              <Group gap="xs">
+                <EditButton entryId={entry.id} />
+                <DeleteButton entryId={entry.id} />
+              </Group>
+            </Card>
           ))}
-        </ul>
+        </Stack>
       )}
-    </main>
+    </Container>
   );
 }

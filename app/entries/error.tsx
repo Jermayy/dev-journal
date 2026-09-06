@@ -1,4 +1,6 @@
 'use client';
+import { Alert, Button, Container, Stack } from '@mantine/core';
+
 export default function EntriesError({
   error,
   reset,
@@ -6,10 +8,14 @@ export default function EntriesError({
   error: Error;
   reset: () => void;
 }) {
-  return;
-  <div>
-    <h2>Something went wrong!</h2>
-    <p>{error.message}</p>
-    <button onClick={reset}>Try again</button>
-  </div>;
+  return (
+    <Container size="sm" py="xl">
+      <Alert color="red" title="Something went wrong!">
+        <Stack gap="sm" align="flex-start">
+          <p>{error.message}</p>
+          <Button onClick={reset}>Try again</Button>
+        </Stack>
+      </Alert>
+    </Container>
+  );
 }
