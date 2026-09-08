@@ -2,13 +2,21 @@ import { describe, expect, it } from 'vitest';
 import { createEntrySchema, updateEntrySchema } from './entry';
 
 describe('createEntrySchema', () => {
-  it('accepts valid title and tag', () => {
-    const result = createEntrySchema.safeParse({ title: 'My entry', tag: 'personal' });
+  it('accepts valid title, tag, and idempotency key', () => {
+    const result = createEntrySchema.safeParse({
+      title: 'My entry',
+      tag: 'personal',
+      idempotencyKey: 'key-1',
+    });
     expect(result.success).toBe(true);
   });
 
   it('rejects an empty title', () => {
-    const result = createEntrySchema.safeParse({ title: '', tag: 'personal' });
+    const result = createEntrySchema.safeParse({
+      title: '',
+      tag: 'personal',
+      idempotencyKey: 'key-1',
+    });
     expect(result.success).toBe(false);
     if (!result.success) {
       expect(result.error.issues[0].message).toBe('Title is required');
@@ -16,11 +24,32 @@ describe('createEntrySchema', () => {
   });
 
   it('rejects an empty tag', () => {
-    const result = createEntrySchema.safeParse({ title: 'My entry', tag: '' });
+    const result = createEntrySchema.safeParse({
+      title: 'My entry',
+      tag: '',
+      idempotencyKey: 'key-1',
+    });
     expect(result.success).toBe(false);
     if (!result.success) {
       expect(result.error.issues[0].message).toBe('Tag is required');
     }
+  });
+
+  it('rejects an empty idempotency key', () => {
+    const result = createEntrySchema.safeParse({
+      title: 'My entry',
+      tag: 'personal',
+      idempotencyKey: '',
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues[0].message).toBe('Idempotency key is required');
+    }
+  });
+
+  it('rejects a missing idempotency key', () => {
+    const result = createEntrySchema.safeParse({ title: 'My entry', tag: 'personal' });
+    expect(result.success).toBe(false);
   });
 
   it('rejects missing fields', () => {

@@ -16,6 +16,7 @@ vi.mock('next/navigation', () => ({
 
 import { prisma } from '@/lib/prisma';
 import { redirect } from 'next/navigation';
+import { Prisma } from '@prisma/client';
 import { createEntry, deleteEntry, updateEntry } from './actions';
 
 function formData(fields: Record<string, string>) {
@@ -32,20 +33,77 @@ beforeEach(() => {
 
 describe('createEntry', () => {
   it('creates an entry with valid data and redirects to /entries', async () => {
-    await createEntry(formData({ title: 'My entry', tag: 'personal' }));
+    await createEntry(formData({ title: 'My entry', tag: 'personal', idempotencyKey: 'key-1' }));
 
     expect(prisma.entry.create).toHaveBeenCalledWith({
-      data: { title: 'My entry', tag: 'personal' },
+      data: { title: 'My entry', tag: 'personal', idempotencyKey: 'key-1' },
     });
     expect(redirect).toHaveBeenCalledWith('/entries');
   });
 
   it('throws without creating an entry when the title is missing', async () => {
-    await expect(createEntry(formData({ title: '', tag: 'personal' }))).rejects.toThrow(
-      'Title is required',
-    );
+    await expect(
+      createEntry(formData({ title: '', tag: 'personal', idempotencyKey: 'key-1' })),
+    ).rejects.toThrow('Title is required');
 
     expect(prisma.entry.create).not.toHaveBeenCalled();
+    expect(redirect).not.toHaveBeenCalled();
+  });
+
+  it('treats a duplicate idempotency key as a successful no-op instead of erroring', async () => {
+    // This is the actual shape thrown by the @prisma/adapter-pg driver adapter:
+    // `meta.target` is not populated, so the constraint name in the message
+    // is what the code has to key off of.
+    vi.mocked(prisma.entry.create).mockRejectedValueOnce(
+      new Prisma.PrismaClientKnownRequestError(
+        'Unique constraint failed on the constraint: `Entry_idempotencyKey_key`',
+        { code: 'P2002', clientVersion: 'test', meta: { modelName: 'Entry' } },
+      ),
+    );
+
+    await createEntry(formData({ title: 'My entry', tag: 'personal', idempotencyKey: 'key-1' }));
+
+    expect(prisma.entry.create).toHaveBeenCalledTimes(1);
+    expect(redirect).toHaveBeenCalledWith('/entries');
+  });
+
+  it('also recognizes a duplicate via meta.target, in case a client reports it that way', async () => {
+    vi.mocked(prisma.entry.create).mockRejectedValueOnce(
+      new Prisma.PrismaClientKnownRequestError('Unique constraint failed', {
+        code: 'P2002',
+        clientVersion: 'test',
+        meta: { target: ['idempotencyKey'] },
+      }),
+    );
+
+    await createEntry(formData({ title: 'My entry', tag: 'personal', idempotencyKey: 'key-1' }));
+
+    expect(prisma.entry.create).toHaveBeenCalledTimes(1);
+    expect(redirect).toHaveBeenCalledWith('/entries');
+  });
+
+  it('rethrows a P2002 on an unrelated constraint instead of swallowing it', async () => {
+    vi.mocked(prisma.entry.create).mockRejectedValueOnce(
+      new Prisma.PrismaClientKnownRequestError(
+        'Unique constraint failed on the constraint: `Entry_pkey`',
+        { code: 'P2002', clientVersion: 'test', meta: { modelName: 'Entry' } },
+      ),
+    );
+
+    await expect(
+      createEntry(formData({ title: 'My entry', tag: 'personal', idempotencyKey: 'key-1' })),
+    ).rejects.toThrow('Unique constraint failed');
+
+    expect(redirect).not.toHaveBeenCalled();
+  });
+
+  it('rethrows non-idempotency database errors instead of redirecting', async () => {
+    vi.mocked(prisma.entry.create).mockRejectedValueOnce(new Error('connection lost'));
+
+    await expect(
+      createEntry(formData({ title: 'My entry', tag: 'personal', idempotencyKey: 'key-1' })),
+    ).rejects.toThrow('connection lost');
+
     expect(redirect).not.toHaveBeenCalled();
   });
 });

@@ -1,5 +1,6 @@
 import { createEntry } from '@/app/entries/actions';
 import BackButton from '@/app/entries/components/backButton';
+import IdempotencyKeyField from '@/app/entries/components/idempotencyKeyField';
 import SubmitButton from '@/app/entries/components/submitButton';
 import { Container, Stack, TextInput, Title } from '@mantine/core';
 
@@ -11,6 +12,7 @@ export default function NewEntryPage() {
         New Entry
       </Title>
       <form action={createEntry}>
+        <IdempotencyKeyField />
         <Stack gap="md" align="flex-start">
           <TextInput name="title" label="Title" placeholder="Title" required w="100%" />
           <TextInput name="tag" label="Tag" placeholder="Tag" required w="100%" />

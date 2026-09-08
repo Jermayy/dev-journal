@@ -11,4 +11,5 @@ model Entry {
   title String
   tag String
   createdAt DateTime @default(now())
+  idempotencyKey String? @unique
 }
